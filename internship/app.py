@@ -2,7 +2,6 @@ import os
 import random
 from flask import Flask, render_template, request, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -13,15 +12,16 @@ app.secret_key = os.urandom(24)
 PLATFORM_LINKS = {
     "instagram":        "https://instagram.com/your_company_profile",
     "facebook":         "https://facebook.com/your_company_page",
-    "chat_box":         "https://your-chat-box-link-here.com",       # <-- Paste your Chat Box link here!
-    "proctor_fallback": "https://your-camera-proctoring-link.com/",
-    "reward_feedback":  "https://your-coupon-and-feedback-link.com/"
+    "chat_box":         "https://characteristic-racial-commissioner-athletics.trycloudflare.com",       # <-- Paste your Chat Box link here!
+    "proctor_fallback": "https://cargo-relating-tops-applicants.trycloudflare.com",
+    "reward_feedback":  "https://cargo-relating-tops-applicants.trycloudflare.com/"
 }
 # =====================================================================
 
 # SQLite Database Setup
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(BASE_DIR, 'platform_database.db')}"
+DB_PATH = os.path.join(BASE_DIR, 'platform_database.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{DB_PATH}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -37,7 +37,7 @@ class Student(db.Model):
     branch = db.Column(db.String(100), nullable=False)
     track_type = db.Column(db.String(100), nullable=False)
     id_card_details = db.Column(db.String(200), nullable=False)
-    password_hash = db.Column(db.String(200), nullable=False)
+    password = db.Column(db.String(200), nullable=False)  # Plain text password
     skills = db.Column(db.Text, nullable=False)
     motivation = db.Column(db.Text, nullable=False)
 
@@ -94,7 +94,7 @@ def register():
             branch=data.get('branch'),
             track_type=data.get('domain'),
             id_card_details=data.get('id_card_details'),
-            password_hash=generate_password_hash(data.get('password')),
+            password=data.get('password'),  # Store password as plain text
             skills=data.get('skills'),
             motivation=data.get('motivation')
         )
@@ -109,7 +109,7 @@ def register():
 def login():
     data = request.get_json() or {}
     student = Student.query.filter_by(email=data.get('email')).first()
-    if student and check_password_hash(student.password_hash, data.get('password')):
+    if student and student.password == data.get('password'):  # Direct comparison
         session['user_email'] = student.email
         return jsonify({
             "status": "success",
@@ -156,7 +156,41 @@ def logout():
     session.clear()
     return jsonify({"status": "logged_out"})
 
-if __name__ == '__main__':
+def init_database():
+    """Initialize the database with proper schema"""
     with app.app_context():
+        # Check if database file exists and is valid
+        if os.path.exists(DB_PATH):
+            try:
+                # Try to connect to the database
+                from sqlalchemy import text
+                db.session.execute(text("SELECT 1"))
+                print("Database already exists and is valid")
+                return
+            except Exception as e:
+                print(f"Invalid database file: {e}")
+                print("Removing invalid database file")
+                os.remove(DB_PATH)
+        
+        # Create new database# Create new database
+        print("Creating new database...")
         db.create_all()
+        
+        # Verify the database was created correctly
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        tables = inspector.get_table_names()
+        print(f"Database created successfully with tables: {', '.join(tables)}")
+        
+        # Show the schema of the student table
+        if 'student' in tables:
+            columns = inspector.get_columns('student')
+            print("\nStudent table schema:")
+            for column in columns:
+                print(f"- {column['name']}: {column['type']} {'(nullable)' if column['nullable'] else '(not nullable)'}")
+
+if __name__ == '__main__':
+    # Initialize the database before starting the server
+    init_database()
+    print("\nStarting Flask server...")
     app.run(host="0.0.0.0", port=5000, debug=False)

